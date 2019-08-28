@@ -1,27 +1,65 @@
-import requests as r
+import requests
 from sys import argv
+import threading
+import queue as Queue
 
-lisst = open(argv[1], 'r').read().split('\n')
-urle = input('Url for check:  ')
-timeout = input('Timeout for proxies  ')
-url = 'http://' + urle
-s = r.Session()
-good = open('good_proxy.txt', 'w')
-bad = open('bad_proxy.txt', 'w')
+proxyList = open(argv[1], 'r').read().split('\n')
+timeout = 5
+url = argv[2]
 
-def check():
-	for item in lisst:
-		proxy = {'https': 'http://'+item}
+good = []
+bad = []
+max_threads = argv[3]
+threads = []
+
+def check(q):
+	if not q.empty():
 		try:
-			dort = s.get(url, proxies=proxy, timeout=int(timeout))
-			if dort.status_code == 200: good.write(item + '\n') and print('good  ' + item)
-			else:  bad.write(item + '\n') and print('bad   ' + item + '  ' + dort.status_code)
+			prox = q.get()
+			proxy = {"https":'https://'+prox}
+		except: pass
+		try:
+			r = requests.get(url,proxies=proxy)
+			if r.status_code == 200:
+				print("%s is good"%prox)
+				good.append(prox)
+			else:
+				print(r.status_code)
+				bad.append(prox)
 		except Exception as e:
-			print('something wrong    '  + item)
-			bad.write(item + '\n')
-			pass
-	print('Finished')
+			print('bad proxy %s'%prox)
+			bad.append(prox)
+	else: pass
+
+
+
+def writing():
+	global good,bad
+	good_proxy = open('good.txt','w')
+	for i in good:
+		good_proxy.write(str(i)+'\n')
+	good_proxy.close()
+	bad_proxy = open('bad.txt','w')
+	for i in bad:
+		bad_proxy.write(i+'\n')
+
+
 try:
-	check()
+	queuelock = threading.Lock()
+	queue = Queue.Queue()
+	for item in proxyList:
+		queue.put(item)
+	while not queue.empty():
+		queuelock.acquire()
+		for i in range(max_threads):
+			my_thread = threading.Thread(target=check,args=(queue,))
+			my_thread.daemon = True
+			my_thread.start()
+			threads.append(my_thread)
+		for i in threads:
+			i.join()
+		queuelock.release()
+	writing()
 except KeyboardInterrupt:
-	print("\nExit")
+		exit()
+
