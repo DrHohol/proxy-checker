@@ -3,7 +3,7 @@ Only http(s) proxies
  # Usage 
  python3 proxy_checker.py proxy_file.txt https://google.com 10
  
- python3 proxy_checker.py proxy* file* link*  count* of* *threads*
+ python3 proxy_checker.py *proxy_file* *link*  *count* *of* *threads*
  
  wait
  
