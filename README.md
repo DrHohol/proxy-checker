@@ -1,13 +1,14 @@
 # proxy checker
 Only http(s) proxies
  # Usage 
- python3 proxy_checker.py proxy_file.txt
+ python3 proxy_checker.py proxy_file.txt https://google.com 10
  
- write url and timeout
+ python3 proxy_checker.py *proxy_file* *link*  *count* *of* *threads*
  
  wait
  
  # requirements
  requests
- 
+ threading
+ queue
  sys
