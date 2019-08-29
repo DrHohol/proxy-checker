@@ -4,7 +4,6 @@ import threading
 import queue as Queue
 
 proxyList = open(argv[1], 'r').read().split('\n')
-timeout = 5
 url = argv[2]
 
 good = []
@@ -19,7 +18,7 @@ def check(q):
 			proxy = {"https":'https://'+prox}
 		except: pass
 		try:
-			r = requests.get(url,proxies=proxy)
+			r = requests.get(url,proxies=proxy, timeout=10)
 			if r.status_code == 200:
 				print("%s is good"%prox)
 				good.append(prox)
@@ -45,6 +44,7 @@ def writing():
 
 
 try:
+	threads = []
 	queuelock = threading.Lock()
 	queue = Queue.Queue()
 	for item in proxyList:
@@ -52,14 +52,12 @@ try:
 	while not queue.empty():
 		queuelock.acquire()
 		for i in range(max_threads):
-			my_thread = threading.Thread(target=check,args=(queue,))
-			my_thread.daemon = True
+			my_thread = threading.Thread(target=check,args=(queue,),daemon=True)
+			#my_thread.daemon = True
 			my_thread.start()
 			threads.append(my_thread)
 		for i in threads:
 			i.join()
 		queuelock.release()
 	writing()
-except KeyboardInterrupt:
-		exit()
-
+except: exit()
