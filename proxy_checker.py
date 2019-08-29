@@ -9,7 +9,7 @@ url = argv[2]
 
 good = []
 bad = []
-max_threads = argv[3]
+max_threads = int(argv[3])
 threads = []
 
 def check(q):
